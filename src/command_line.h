@@ -27,8 +27,10 @@
 #ifndef _COMMAND_LINE_H
 #define _COMMAND_LINE_H
 
-
-#include <argp.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <getopt.h>
 #include "global_def.h"
 
 

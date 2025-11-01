@@ -37,6 +37,7 @@ CC                      := gcc
 
 ifeq ($(UNAME),Darwin)
 CC                      := clang
+DARWIN_VERSION          := $(shell uname -r | cut -d. -f1)
 endif
 
 ifeq ($(UNAME),FreeBSD)
@@ -97,7 +98,7 @@ ifeq ($(UNAME),Darwin)
 export MACOSX_DEPLOYMENT_TARGET=10.9
 CFLAGS_NATIVE           := $(CFLAGS)
 
-ifeq ($(shell test $(PROD_VERS) -le 11; echo $$?), 0)
+ifeq ($(shell test $(DARWIN_VERSION) -le 11; echo $$?), 0)
 CFLAGS_NATIVE           += -DMISSING_CLOCK_GETTIME
 endif
 

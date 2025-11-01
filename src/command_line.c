@@ -25,64 +25,52 @@
 
 #include "command_line.h"
 
-
-// Need to set version to be a global value for argp to make use of it
-const char *argp_program_version = VERSION;
-
-
-//   OPTIONS.  Field 1 in ARGP.
-//   Order of fields: {NAME, KEY, ARG, FLAGS, DOC}.
-static struct argp_option options[] =
-{
-    {"rule_name",  'r', "OUTFILE", 0, "The ruleset to use. Default is: 'Default'"},
-    {"debug", 'd', 0, 0, "Prints out debugging info vs guesses."},
-    {0}
-};
-
-
-//   PARSER. Field 2 in ARGP.
-//   Order of parameters: KEY, ARG, STATE.
-static error_t parse_opt (int key, char *arg, struct argp_state *state){
-    struct program_info *program_info = state->input;
-
-    switch (key) {
-        case 'd':
-            program_info->debug = 1;
-            break;
-        case 'r':
-            program_info->rule_name = arg;
-            break;
-        default:
-            return ARGP_ERR_UNKNOWN;
-    }
-    return 0;
+static void usage(const char *progname) {
+    printf("Usage: %s [OPTION...] ARG1 ARG2\n", progname);
+    printf("Pretty Cool Fuzzy Guesser: Version %s\n\n", VERSION);
+    printf("  -d, --debug                Prints out debugging info vs guesses.\n");
+    printf("  -r, --rule_name=OUTFILE    The ruleset to use. Default is: 'Default'\n");
+    printf("  -?, --help                 Give this help list\n");
+    printf("  -V, --version              Print program version\n\n");
+    printf("Mandatory or optional arguments to long options are also mandatory or optional\n");
+    printf("for any corresponding short options.\n\n");
+    printf("A program for generationg password guesses\n");
 }
 
-
-// ARGS_DOC. Field 3 in ARGP.
-// A description of the non-option command-line arguments that we accept.
-static char args_doc[] = "ARG1 ARG2";
-
-
-// DOC.  Field 4 in ARGP.
-// Program documentation.
-static char doc[] =
-  "Pretty Cool Fuzzy Guesser: Version\vA program for generationg password guesses";
-
-
-// The ARGP structure itself.
-static struct argp argp = {options, parse_opt, args_doc, doc};
-
-
 int parse_command_line(int argc, char **argv, struct program_info *program_info) {
-	
-    // Set argument defaults
+    // Set defaults
     program_info->rule_name = "Default";
     program_info->debug = 0;
     program_info->version = VERSION;
     program_info->min_supported_version = MIN_SUPPORTED_VERSION;
-    
-    argp_parse(&argp, argc, argv, 0, 0, program_info);
-    
+
+    // Define long options equivalent to your argp table
+    static struct option long_options[] = {
+        {"debug",     no_argument,       0, 'd'},
+        {"rule_name", required_argument, 0, 'r'},
+        {"help",      no_argument,       0, '?'},
+        {"version",   no_argument,       0, 'V'},
+        {0, 0, 0, 0}
+    };
+
+    int opt;
+    while ((opt = getopt_long(argc, argv, "dr:?uV", long_options, NULL)) != -1) {
+        switch (opt) {
+            case 'd':
+                program_info->debug = 1;
+                break;
+            case 'r':
+                program_info->rule_name = strdup(optarg);
+                break;
+            case 'V':
+                printf("%s\n", VERSION);
+                exit(0);
+            case '?':
+            default:
+                usage(argv[0]);
+                exit(0);
+        }
+    }
+
     return 0;
 }
