@@ -34,7 +34,6 @@
 
 // Handle specifics for path info for Windows vs. Linux
 #ifdef _WIN32
-    #define PATH_MAX 256
     #define SLASH '\\'
 #else
     #include <limits.h>

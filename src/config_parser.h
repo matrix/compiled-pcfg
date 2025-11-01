@@ -27,8 +27,8 @@
 #define _CONFIG_PARSER_H
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-
 
 // The maximum length of a config line to parse
 #define MAX_CONFIG_LINE 8224

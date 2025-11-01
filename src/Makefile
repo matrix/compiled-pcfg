@@ -6,6 +6,7 @@
 
 DEBUG                   := 0
 PRODUCTION              := 0
+ENABLE_LTO              ?= 1
 
 ##
 ## Detect Operating System
@@ -25,10 +26,18 @@ ifeq (,$(filter $(UNAME),Linux FreeBSD Darwin CYGWIN MSYS2))
 $(error "! Your Operating System ($(UNAME)) is not supported by this Makefile")
 endif
 
+# force disable LTO if DEBUG > 0
+ifeq ($(shell [ $(DEBUG) -gt 0 ] && echo true),true)
+override ENABLE_LTO := 0
+endif
+
 ifeq ($(DEBUG),1)
 $(warning "## Detected Operating System : $(UNAME)")
 endif
 
+ifeq ($(ENABLE_LTO),1)
+CFLAGS                  += -flto=auto
+endif
 
 ##
 ## Native compiler paths
@@ -45,11 +54,7 @@ CC                      := cc
 endif
 
 ifeq ($(DEBUG),0)
-CFLAGS                  += -O2
-ifneq ($(UNAME),Darwin)
-LFLAGS                  += -s
-endif
-
+CFLAGS                  += -O3 -fomit-frame-pointer
 else
 ifeq ($(DEBUG),1)
 ifneq ($(UNAME),Darwin)
@@ -69,105 +74,57 @@ endif
 endif
 endif
 
-CFLAGS                  += -pipe -std=gnu99 -Iinclude/ -IOpenCL/
-
-##
-## Native compilation target
-##
-
-ifeq ($(UNAME),Linux)
-CFLAGS_NATIVE           := $(CFLAGS)
-CFLAGS_NATIVE           += -DWITH_HWMON
-LFLAGS_NATIVE           := $(LFLAGS)
-LFLAGS_NATIVE           += -lpthread
-LFLAGS_NATIVE           += -ldl
-LFLAGS_NATIVE           += -lrt
-LFLAGS_NATIVE           += -lm
-endif # Linux
-
-ifeq ($(UNAME),FreeBSD)
-ifndef PORTNAME
-CFLAGS_NATIVE           := $(CFLAGS)
-LFLAGS_NATIVE           := $(LFLAGS)
-LFLAGS_NATIVE           += -lpthread
-LFLAGS_NATIVE           += -lm
-endif
-endif # FreeBSD
+CFLAGS                  += -pipe -std=gnu99
 
 ifeq ($(UNAME),Darwin)
-export MACOSX_DEPLOYMENT_TARGET=10.9
-CFLAGS_NATIVE           := $(CFLAGS)
+export MACOSX_DEPLOYMENT_TARGET=15.0
 
 ifeq ($(shell test $(DARWIN_VERSION) -le 11; echo $$?), 0)
-CFLAGS_NATIVE           += -DMISSING_CLOCK_GETTIME
+CFLAGS                  += -DMISSING_CLOCK_GETTIME
 endif
-
-LFLAGS_NATIVE           := $(LFLAGS)
-LFLAGS_NATIVE           += -framework OpenCL
-LFLAGS_NATIVE           += -lpthread
-LFLAGS_NATIVE           += -liconv
 endif # Darwin
 
-ifeq ($(UNAME),CYGWIN)
-CFLAGS_NATIVE           := $(CFLAGS)
-CFLAGS_NATIVE           += -DWITH_HWMON
-LFLAGS_NATIVE           := $(LFLAGS)
-LFLAGS_NATIVE           += -Wl,--dynamicbase
-LFLAGS_NATIVE           += -Wl,--nxcompat
-LFLAGS_NATIVE           += -lpsapi
-LFLAGS_NATIVE           += -liconv
-endif # CYGWIN
-
-ifeq ($(UNAME),MSYS2)
-CFLAGS_NATIVE           := $(CFLAGS)
-CFLAGS_NATIVE           += -DWITH_HWMON
-LFLAGS_NATIVE           := $(LFLAGS)
-LFLAGS_NATIVE           += -Wl,--dynamicbase
-LFLAGS_NATIVE           += -Wl,--nxcompat
-LFLAGS_NATIVE           += -lpsapi
-LFLAGS_NATIVE           += -liconv
-LFLAGS_NATIVE           += -lws2_32
-endif # MSYS2
-
+##
+## target
+##
 
 pcfg_guesser: src/pcfg_guesser.o src/tty.o src/banner_info.o src/command_line.o src/grammar_io.o src/config_parser.o src/helper_io.o src/base_structure_io.o src/pqueue.o src/pcfg_pqueue.o
-	$(CC) $(CFLAGS_NATIVE) src/pcfg_guesser.o src/tty.o src/banner_info.o src/command_line.o src/config_parser.o src/grammar_io.o src/helper_io.o src/base_structure_io.o src/pqueue.o src/pcfg_pqueue.o -O3 -o pcfg_guesser
-	
+	$(CC) $(CFLAGS) src/pcfg_guesser.o src/tty.o src/banner_info.o src/command_line.o src/config_parser.o src/grammar_io.o src/helper_io.o src/base_structure_io.o src/pqueue.o src/pcfg_pqueue.o -o pcfg_guesser
+
 pcfg_guesser.o: src/pcfg_guesser.c src/pcfg_guesser.h src/grammar.h
-	$(CC) $(CFLAGS_NATIVE) -c src/pcfg_guesser.c
-	
+	$(CC) $(CFLAGS) -c src/pcfg_guesser.c
+
 tty.o: src/tty.c src/tty.h
-	$(CC) $(CFLAGS_NATIVE) -c src/tty.c
-	
+	$(CC) $(CFLAGS) -c src/tty.c
+
 banner_info.o: src/banner_info.c src/bannar_info.h
-	$(CC) $(CFLAGS_NATIVE) -c src/banner_info.c
-	
+	$(CC) $(CFLAGS) -c src/banner_info.c
+
 command_line.o: src/command_line.c src/command_line.h
-	$(CC) $(CFLAGS_NATIVE) -c src/command_line.c
+	$(CC) $(CFLAGS) -c src/command_line.c
 
 grammar_io.o: src/grammar_io.c src/grammar_io.h src/grammar.h
-	$(CC) $(CFLAGS_NATIVE) -c src/grammar_io.c 
+	$(CC) $(CFLAGS) -c src/grammar_io.c
 
 config_parser.o: src/config_parser.c src/config_parser.h
-	$(CC) $(CFLAGS_NATIVE) -c src/config_parser.c
-	
+	$(CC) $(CFLAGS) -c src/config_parser.c
+
 helper_io.o: src/helper_io.c src/helper_io.h
-	$(CC) $(CFLAGS_NATIVE) -c src/helper_io.c
-	
+	$(CC) $(CFLAGS) -c src/helper_io.c
+
 base_structure_io.o: src/base_structure_io.c src/base_structure_io.h
-	$(CC) $(CFLAGS_NATIVE) -c src/base_structure_io.c	
+	$(CC) $(CFLAGS) -c src/base_structure_io.c
 
 pqueue.o: src/pqueue.c src/pqueue.h
-	$(CC) $(CFLAGS_NATIVE) -c src/pqueue.c	
+	$(CC) $(CFLAGS) -c src/pqueue.c
 
 pcfg_pqueue.o: src/pcfg_pqueue.c src/pcfg_pqueue.h
-	$(CC) $(CFLAGS_NATIVE) -c src/pcfg_pqueue.c	
-
-
+	$(CC) $(CFLAGS) -c src/pcfg_pqueue.c
 
 main: pcfg_guesser
 
 clean:
-	rm -f pcfg_guesser 
+	rm -f pcfg_guesser
+	rm -f pcfg_guesser.exe
 	rm -f src/*.o
 	rm -f src/*.a

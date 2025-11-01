@@ -27,13 +27,13 @@
 
 
 void recursive_guess(PQItem *pq_item, int base_pos, char *cur_guess, int start_point) {
-    
+
     int new_start = start_point;
-    
+
     for (int i = 0; i < pq_item->pt[base_pos]->size; i++) {
-         
+
         // This is a capitalization section
-        
+
         if (strncmp(pq_item->pt[base_pos]->type,"C",2) == 0) {
             // Go backward to the previous section and apply the mask
             // Note, if someone messed with the ruleset this could cause issues, so
@@ -44,7 +44,7 @@ void recursive_guess(PQItem *pq_item, int base_pos, char *cur_guess, int start_p
                 fprintf(stderr, "Error with the capitalization masks\n");
                 return;
             }
-            
+
             // I'm pretty sure this isn't going to be sufficient for UTF-8
             // characters, but that's a rabbit hole I'm going to have to dive
             // into at a later point.
@@ -57,13 +57,13 @@ void recursive_guess(PQItem *pq_item, int base_pos, char *cur_guess, int start_p
                     cur_guess[start_point - mask_len + y] = toupper(cur_guess[start_point - mask_len + y]);
                 }
             }
-            
+
         }
         else {
             strncpy(cur_guess + start_point, pq_item->pt[base_pos]->value[i], MAX_GUESS_SIZE - start_point);
             new_start = strnlen(cur_guess, MAX_GUESS_SIZE);
         }
-        
+
         // If this is the last item, generate a guess
         if (base_pos == (pq_item->size - 1)) {
             printf("%s\n",cur_guess);
@@ -72,21 +72,22 @@ void recursive_guess(PQItem *pq_item, int base_pos, char *cur_guess, int start_p
         else {
             recursive_guess(pq_item, base_pos +1, cur_guess, new_start);
         }
-    }      
+    }
+
     return;
 }
 
 
 // Generates guesses from a parse_tree
 void  generate_guesses(PQItem *pq_item) {
-       
+
     //Used for debugging
     //int i;
     //for (i=0; i < pq_item->size; i++) {
     //    printf("%s%li ",pq_item->pt[i]->type, pq_item->pt[i]->id);
     //}
     //printf("\n");
-    
+
     char guess[MAX_GUESS_SIZE];
     recursive_guess(pq_item, 0, guess, 0);
 
@@ -96,34 +97,33 @@ void  generate_guesses(PQItem *pq_item) {
 
 // The main program
 int main(int argc, char *argv[]) {
-	
-	// Holds the info from the command line
-	struct program_info program_info;
+
+    // Holds the info from the command line
+    struct program_info program_info;
 
     // Parse the command line
-	if (parse_command_line(argc, argv, &program_info) != 0) {
-		fprintf(stderr, "Error, parsing command line. Exiting\n");
+    if (parse_command_line(argc, argv, &program_info) != 0) {
+        fprintf(stderr, "Error, parsing command line. Exiting\n");
         return 0;
-	}
-    
+    }
+
     // Print the startup banner
     print_banner(program_info.version);
-    
+
     // Create the empty grammar
     PcfgGrammar pcfg;
-    
-    
+
     // Intiazlie the grammar and Priority Queue
     if (load_grammar(argv[0], program_info, &pcfg) != 0) {
         fprintf(stderr, "Error loading ruleset. Exiting\n");
         return 0;
-	}
+    }
 
     fprintf(stderr, "Initailizing the Priority Queue\n");
     priority_queue_t* pq;
 
     initialize_pcfg_pqueue(&pq, &pcfg);
-    
+
     fprintf(stderr, "Starting to generate guesses\n");
 
     // Start generating guesses
@@ -133,13 +133,12 @@ int main(int argc, char *argv[]) {
             printf("Memory allocation error when popping item from pqueue\n");
             return 1;
         }
-        
+
         generate_guesses(pq_item);
-        
+
         free(pq_item->pt);
         free(pq_item);
     }
 
-
-	return 0;
+    return 0;
 }

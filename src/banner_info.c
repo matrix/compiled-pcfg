@@ -28,7 +28,7 @@
 // Prints out a startup banner_info
 //
 void print_banner(char *version) {
-    
+
     fprintf(stderr,"    ____            __  __           ______            __              \n");
     fprintf(stderr,"   / __ \\________  / /_/ /___  __   / ____/___  ____  / /              \n");
     fprintf(stderr,"  / /_/ / ___/ _ \\/ __/ __/ / / /  / /   / __ \\/ __ \\/ /               \n");
@@ -41,6 +41,6 @@ void print_banner(char *version) {
     fprintf(stderr,"                         /_/                                           \n");
     fprintf(stderr," ---------------------------> PURE C EDITION!!!                       \n");
     fprintf(stderr,"Version: %s\n", version);
-    
+
     return;
 }

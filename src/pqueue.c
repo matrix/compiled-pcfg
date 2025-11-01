@@ -23,9 +23,7 @@
 //
 //
 
-
 #include "pqueue.h"
-
 
 typedef int(*compare)(const void* element1, const void* element2);
 
@@ -56,7 +54,7 @@ static void rise(priority_queue_t* pq, int k) {
 static void fall(priority_queue_t* pq, int k) {
     while (2 * k <= pq->n) {
         int child = 2 * k;
-        
+
         if (child < pq->n && pq->cmp(pq->array[child], pq->array[child + 1]) < 0) {
             child++;
         }
