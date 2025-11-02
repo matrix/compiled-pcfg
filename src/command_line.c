@@ -29,7 +29,7 @@ static void usage(const char *progname) {
     printf("Usage: %s [OPTION...] ARG1 ARG2\n", progname);
     printf("Pretty Cool Fuzzy Guesser: Version %s\n\n", VERSION);
     printf("  -d, --debug                Prints out debugging info vs guesses.\n");
-    printf("  -r, --rule_name=OUTFILE    The ruleset to use. Default is: 'Default'\n");
+    printf("  -r, --rule_name=DIR        The ruleset to use. Default is: '.'\n");
     printf("  -?, --help                 Give this help list\n");
     printf("  -V, --version              Print program version\n\n");
     printf("Mandatory or optional arguments to long options are also mandatory or optional\n");
@@ -39,7 +39,7 @@ static void usage(const char *progname) {
 
 int parse_command_line(int argc, char **argv, struct program_info *program_info) {
     // Set defaults
-    program_info->rule_name = "Default";
+    program_info->rule_name = ".";
     program_info->debug = 0;
     program_info->version = VERSION;
     program_info->min_supported_version = MIN_SUPPORTED_VERSION;
