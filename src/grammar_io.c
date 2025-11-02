@@ -286,6 +286,13 @@ int load_terminal(char *config_filename, char *base_directory, char *structure, 
         char filename[PATH_MAX];
         snprintf(filename, PATH_MAX, "%s%s%c%s", base_directory,section_folder,SLASH,result[i]);
 
+        // skip empty file
+        FILE *fp = fopen (filename, "r");
+        if (fp == NULL) continue;
+        int c = fgetc(fp);
+        fclose (fp);
+        if (c == EOF) continue;
+
         grammar_item[id] = load_term_from_file(filename, type, id);
 
         if (grammar_item[id] == NULL) {
@@ -351,43 +358,43 @@ int load_grammar(char *arg_exec, struct program_info program_info, PcfgGrammar *
 
     // Read in the alpha terminals
     if (load_terminal(config_filename, base_directory, "BASE_A", "A", pcfg->alpha) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (alpha). Exiting\n");
         return 1;
     }
 
     // Read in the capitalization masks
     if (load_terminal(config_filename, base_directory, "CAPITALIZATION", "C", pcfg->capitalization) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (capitalization). Exiting\n");
         return 1;
     }
 
     // Read in the digit terminals
     if (load_terminal(config_filename, base_directory, "BASE_D", "D", pcfg->digits) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (digits). Exiting\n");
         return 1;
     }
 
     // Read in the years terminals
     if (load_terminal(config_filename, base_directory, "BASE_Y", "Y", pcfg->years) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (years). Exiting\n");
         return 1;
     }
 
     // Read in the "other" terminals
     if (load_terminal(config_filename, base_directory, "BASE_O", "O", pcfg->other) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (other). Exiting\n");
         return 1;
     }
 
     // Read in the conteXt sensitive terminals
     if (load_terminal(config_filename, base_directory, "BASE_X", "X", pcfg->x) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (x). Exiting\n");
         return 1;
     }
 
     // Read in the keyboard combo terminals
     if (load_terminal(config_filename, base_directory, "BASE_K", "K", pcfg->keyboard) != 0) {
-        fprintf(stderr, "Error reading the rules file. Exiting\n");
+        fprintf(stderr, "Error reading the rules file (keyboard). Exiting\n");
         return 1;
     }
 
