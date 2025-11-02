@@ -1,5 +1,8 @@
 name: Build
 
+env:
+  include_paths: '**'
+
 on:
   push:
     branches:

@@ -22,7 +22,7 @@ UNAME                   := $(patsubst MSYS_NT-%,MSYS2,$(UNAME))
 UNAME                   := $(patsubst MINGW32_NT-%,MSYS2,$(UNAME))
 UNAME                   := $(patsubst MINGW64_NT-%,MSYS2,$(UNAME))
 
-ifeq (,$(filter $(UNAME),Linux FreeBSD Darwin CYGWIN MSYS2))
+ifeq (,$(filter $(UNAME),Linux OpenBSD FreeBSD NetBSD DragonFly Darwin CYGWIN MSYS2))
 $(error "! Your Operating System ($(UNAME)) is not supported by this Makefile")
 endif
 
@@ -49,8 +49,12 @@ CC                      := clang
 DARWIN_VERSION          := $(shell uname -r | cut -d. -f1)
 endif
 
-ifeq ($(UNAME),FreeBSD)
+ifneq (,$(filter $(UNAME),OpenBSD FreeBSD NetBSD DragonFly))
 CC                      := cc
+endif
+
+ifeq ($(UNAME),NetBSD)
+CC                      := gcc
 endif
 
 ifeq ($(DEBUG),0)
