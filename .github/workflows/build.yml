@@ -1,0 +1,144 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+    paths:
+      - 'src/**.h'
+      - 'src/**.c'
+      - 'src/Makefile'
+      - 'Makefile'
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'src/**.h'
+      - 'src/**.c'
+      - 'src/Makefile'
+      - 'Makefile'
+      - '.github/workflows/build.yml'
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest, freebsd, openbsd, netbsd, dragonflybsd]
+        include:
+          - os: ubuntu-latest
+            os_name: Linux
+            os_name_lowercase: linux
+          - os: macos-latest
+            os_name: macOS
+            os_name_lowercase: macos
+          - os: windows-latest
+            os_name: Windows
+            os_name_lowercase: windows
+          - os: freebsd
+            os_name: FreeBSD
+            os_name_lowercase: freebsd
+          - os: openbsd
+            os_name: OpenBSD
+            os_name_lowercase: openbsd
+          - os: netbsd
+            os_name: NetBSD
+            os_name_lowercase: netbsd
+          - os: dragonflybsd
+            os_name: DragonflyBSD
+            os_name_lowercase: dragonflybsd
+
+    name: Build ${{ matrix.os_name }}
+    runs-on: ${{ (matrix.os == 'freebsd' || matrix.os == 'openbsd' || matrix.os == 'netbsd' || matrix.os == 'dragonflybsd') && 'ubuntu-latest' || matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
+          repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
+
+      - name: Install dependencies (Windows only)
+        if: matrix.os_name_lowercase == 'windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: |
+            gcc
+            git
+            make
+            mingw-w64-x86_64-clang
+            mingw-w64-x86_64-lld
+            mingw-w64-x86_64-llvm
+            mingw-w64-x86_64-toolchain
+
+      - name: Build (Windows)
+        if: matrix.os_name_lowercase == 'windows'
+        shell: msys2 {0}
+        env:
+          PATH: /mingw64/bin:$PATH
+          WIN_PYTHON: ""
+        run: |
+          make CC=x86_64-w64-mingw32-gcc
+
+      - name: Build (Linux/macOS)
+        if: matrix.os_name_lowercase == 'linux' || matrix.os_name_lowercase == 'macos'
+        env:
+          TERM: xterm
+        run: |
+          make CC=clang
+
+      - name: Build (FreeBSD)
+        if: matrix.os_name_lowercase == 'freebsd'
+        uses: vmactions/freebsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg update
+            pkg install -y git gcc gmake llvm
+          run: |
+            gmake CC=clang
+
+      - name: Build (OpenBSD)
+        if: matrix.os_name_lowercase == 'openbsd'
+        uses: vmactions/openbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg_add git gcc%11 gmake llvm%19
+          run: |
+            export TERM=xterm
+            gmake CC=clang
+
+      - name: Build (NetBSD)
+        if: matrix.os_name_lowercase == 'netbsd'
+        uses: vmactions/netbsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            export PATH="/usr/sbin:$PATH"
+            pkg_add git gcc14 gmake llvm clang
+          run: |
+            export PATH="/usr/pkg/gcc14/bin:$PATH"
+            export TERM=xterm
+            gmake CC=clang
+
+      - name: Build (DragonflyBSD)
+        if: matrix.os_name_lowercase == 'dragonflybsd'
+        uses: vmactions/dragonflybsd-vm@v1
+        with:
+          usesh: true
+          prepare: |
+            pkg update
+            pkg install -y git gcc gmake llvm
+          run: |
+            export TERM=xterm
+            gmake CC=clang
+
+      - name: Generate artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: compiled-pcfg-${{ matrix.os_name_lowercase }}
+          path: ${{ env.include_paths }}
