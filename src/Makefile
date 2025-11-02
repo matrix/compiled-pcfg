@@ -31,8 +31,8 @@ ifeq ($(shell [ $(DEBUG) -gt 0 ] && echo true),true)
 override ENABLE_LTO := 0
 endif
 
-ifeq ($(DEBUG),1)
-$(warning "## Detected Operating System : $(UNAME)")
+ifneq (,$(filter $(UNAME),NetBSD DragonFly))
+override ENABLE_LTO := 0
 endif
 
 ifeq ($(ENABLE_LTO),1)
@@ -55,6 +55,12 @@ endif
 
 ifeq ($(UNAME),NetBSD)
 CC                      := gcc
+endif
+
+ifeq ($(shell [ $(DEBUG) -gt 0 ] && echo true),true)
+$(info "## Detected Operating System : $(UNAME)")
+$(info "## Detected ENABLE_LTO : $(ENABLE_LTO)")
+$(info "## Detected CC : $(CC)")
 endif
 
 ifeq ($(DEBUG),0)
