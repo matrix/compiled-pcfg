@@ -57,7 +57,7 @@ jobs:
     name: Build ${{ matrix.os_name }}
     runs-on: ${{ (matrix.os == 'freebsd' || matrix.os == 'openbsd' || matrix.os == 'netbsd' || matrix.os == 'dragonflybsd') && 'ubuntu-latest' || matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref }}
           repository: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}
@@ -122,7 +122,10 @@ jobs:
           usesh: true
           prepare: |
             export PATH="/usr/sbin:$PATH"
-            pkg_add git gcc14 gmake llvm clang
+            pkg_add pkgin
+            pkgin -y update
+            pkgin -y full-upgrade
+            pkgin -y install git gcc14 gmake llvm clang
           run: |
             export PATH="/usr/pkg/gcc14/bin:$PATH"
             export TERM=xterm
@@ -141,7 +144,7 @@ jobs:
             gmake CC=clang
 
       - name: Generate artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: compiled-pcfg-${{ matrix.os_name_lowercase }}
           path: ${{ env.include_paths }}
