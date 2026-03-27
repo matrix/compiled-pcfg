@@ -25,6 +25,8 @@
 
 #include "pcfg_guesser.h"
 
+static long long guess_count = 0;
+static long long guess_limit = 0;
 
 void recursive_guess(PQItem *pq_item, int base_pos, char *cur_guess, int start_point) {
 
@@ -66,7 +68,9 @@ void recursive_guess(PQItem *pq_item, int base_pos, char *cur_guess, int start_p
 
         // If this is the last item, generate a guess
         if (base_pos == (pq_item->size - 1)) {
+            if (guess_limit > 0 && guess_count >= guess_limit) return;
             printf("%s\n",cur_guess);
+            guess_count++;
         }
         // Not the last item so doing this recursivly
         else {
@@ -124,10 +128,14 @@ int main(int argc, char *argv[]) {
 
     initialize_pcfg_pqueue(&pq, &pcfg);
 
+    guess_limit = program_info.limit;
+
     fprintf(stderr, "Starting to generate guesses\n");
 
     // Start generating guesses
     while (!priority_queue_empty(pq)) {
+        if (guess_limit > 0 && guess_count >= guess_limit) break;
+
         PQItem* pq_item = pcfg_pq_pop(pq);
         if (pq_item == NULL) {
             printf("Memory allocation error when popping item from pqueue\n");

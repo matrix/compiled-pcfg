@@ -40,6 +40,7 @@ struct program_info {
     char *rule_name;          // The rule name, -r
     char *version;
     char *min_supported_version; // The oldedst supported ruleset
+    long long limit;          // Max number of guesses (0 = unlimited)
 };
 
 

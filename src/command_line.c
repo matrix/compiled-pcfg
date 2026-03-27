@@ -30,6 +30,7 @@ static void usage(const char *progname) {
     printf("Pretty Cool Fuzzy Guesser: Version %s\n\n", VERSION);
     printf("  -d, --debug                Prints out debugging info vs guesses.\n");
     printf("  -r, --rule_name=DIR        The ruleset to use. Default is: '.'\n");
+    printf("  -l, --limit=NUM            Max guesses to generate (0 = unlimited)\n");
     printf("  -?, --help                 Give this help list\n");
     printf("  -V, --version              Print program version\n\n");
     printf("Mandatory or optional arguments to long options are also mandatory or optional\n");
@@ -41,6 +42,7 @@ int parse_command_line(int argc, char **argv, struct program_info *program_info)
     // Set defaults
     program_info->rule_name = ".";
     program_info->debug = 0;
+    program_info->limit = 0;
     program_info->version = VERSION;
     program_info->min_supported_version = MIN_SUPPORTED_VERSION;
 
@@ -48,19 +50,23 @@ int parse_command_line(int argc, char **argv, struct program_info *program_info)
     static struct option long_options[] = {
         {"debug",     no_argument,       0, 'd'},
         {"rule_name", required_argument, 0, 'r'},
+        {"limit",     required_argument, 0, 'l'},
         {"help",      no_argument,       0, '?'},
         {"version",   no_argument,       0, 'V'},
         {0, 0, 0, 0}
     };
 
     int opt;
-    while ((opt = getopt_long(argc, argv, "dr:?uV", long_options, NULL)) != -1) {
+    while ((opt = getopt_long(argc, argv, "dr:l:?uV", long_options, NULL)) != -1) {
         switch (opt) {
             case 'd':
                 program_info->debug = 1;
                 break;
             case 'r':
                 program_info->rule_name = strdup(optarg);
+                break;
+            case 'l':
+                program_info->limit = atoll(optarg);
                 break;
             case 'V':
                 printf("%s\n", VERSION);
